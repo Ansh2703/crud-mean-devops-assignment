@@ -7,9 +7,9 @@ cd "$REPO_DIR" || exit 1
 # update repo (if using git clone on VM)
 git pull origin main || true
 
-# pull latest images and restart
-docker compose -f docker-compose.prod.yml pull || true
-docker compose -f docker-compose.prod.yml up -d --remove-orphans
+# Pull latest images and restart (use sudo so non-interactive SSH can run)
+sudo docker compose -f docker-compose.prod.yml pull || true
+sudo docker compose -f docker-compose.prod.yml up -d --remove-orphans
 
 # optional cleanup
-docker system prune -f || true
+sudo docker system prune -f || true
