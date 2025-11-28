@@ -1,4 +1,4 @@
-name: CI/CD - Build, Push, Deploy
+name: CI/CD - Build, Push, Deploy (debug)
 
 on:
   push:
@@ -13,8 +13,39 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout repo (full)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Show repository root (debug)
+        run: |
+          echo "=== pwd ==="
+          pwd
+          echo "=== root listing ==="
+          ls -la
+          echo "=== top 3 levels (tree) ==="
+          find . -maxdepth 3 -type f -printf "%p\n" | sed -n '1,200p' || true
+          echo "=== backend listing ==="
+          ls -la backend || true
+          echo "=== backend Dockerfile (if present) ==="
+          if [ -f backend/Dockerfile ]; then
+            echo "---- backend/Dockerfile start ----"
+            sed -n '1,200p' backend/Dockerfile || true
+            echo "---- backend/Dockerfile end ----"
+          else
+            echo "backend/Dockerfile NOT FOUND"
+          fi
+          echo "=== frontend listing ==="
+          ls -la frontend || true
+          echo "=== frontend Dockerfile (if present) ==="
+          if [ -f frontend/Dockerfile ]; then
+            echo "---- frontend/Dockerfile start ----"
+            sed -n '1,200p' frontend/Dockerfile || true
+            echo "---- frontend/Dockerfile end ----"
+          else
+            echo "frontend/Dockerfile NOT FOUND"
+          fi
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -32,7 +63,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./backend
-          file: Dockerfile        # <-- relative to context
+          file: Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/crud-backend:latest
 
@@ -40,7 +71,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
-          file: Dockerfile        # <-- relative to context
+          file: Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/crud-frontend:latest
 
