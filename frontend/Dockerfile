@@ -3,20 +3,20 @@
 FROM node:18-alpine AS build
 WORKDIR /app
 
-# install dependencies
 COPY package*.json ./
-RUN npm ci
 
-# copy source & build
+ENV NPM_CONFIG_LOGLEVEL=error
+ENV NODE_OPTIONS=--max_old_space_size=4096
+
+# Use npm ci if package-lock exists, otherwise npm install. Add flags for CI.
+RUN if [ -f package-lock.json ]; then npm ci --no-audit --no-fund --unsafe-perm --legacy-peer-deps; else npm install --no-audit --no-fund --unsafe-perm --legacy-peer-deps; fi
+
 COPY . .
-# build in production mode (uses angular.json defaultConfiguration: production)
 RUN npm run build -- --configuration production
 
 # Stage 2: serve with nginx
 FROM nginx:stable-alpine
-# remove default nginx content (optional)
 RUN rm -rf /usr/share/nginx/html/*
-# copy built files from the builder stage
 COPY --from=build /app/dist/angular-15-crud /usr/share/nginx/html
 
 EXPOSE 80

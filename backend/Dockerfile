@@ -1,21 +1,21 @@
 # backend/Dockerfile
 FROM node:18-alpine
 
-# Create app directory
 WORKDIR /usr/src/app
 
-# Copy dependency definitions
+# Reduce npm churn: copy package files first for caching
 COPY package*.json ./
 
-# Install dependencies (production)
-RUN npm install --production
+# Make npm more tolerant in CI builds
+ENV NPM_CONFIG_LOGLEVEL=error
+ENV NODE_OPTIONS=--max_old_space_size=4096
+
+# Install production deps with safe flags
+RUN npm config set unsafe-perm true \
+ && npm install --production --no-audit --no-fund --legacy-peer-deps
 
 # Copy source code
 COPY . .
 
-# Expose the port the app uses (server.js uses 8080 by default)
-ENV PORT=8080
 EXPOSE 8080
-
-# Start the app
 CMD ["node", "server.js"]
