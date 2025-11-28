@@ -11,6 +11,6 @@ ENV npm_config_build_from_source=true
 ENV NPM_CONFIG_UNSAFE_PERM=true
 
 RUN npm install --production --no-audit --no-fund --legacy-peer-deps --verbose \
-  || (echo "=== NPM INSTALL FAILED - SHOWING LOGS ===" && cat /root/.npm/_logs/* || true) && exit 1
+  || { echo "=== NPM INSTALL FAILED - SHOWING LOGS ===" && cat /root/.npm/_logs/* || true; exit 1; }
 
 COPY . .
