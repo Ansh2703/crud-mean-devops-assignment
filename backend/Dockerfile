@@ -1,21 +1,16 @@
-# backend/Dockerfile
-FROM node:18-alpine
+﻿FROM node:18-alpine
 
 WORKDIR /usr/src/app
 
-# Reduce npm churn: copy package files first for caching
+RUN apk add --no-cache python3 make g++ build-base bash \
+  && ln -sf /usr/bin/python3 /usr/bin/python
+
 COPY package*.json ./
 
-# Make npm more tolerant in CI builds
-ENV NPM_CONFIG_LOGLEVEL=error
-ENV NODE_OPTIONS=--max_old_space_size=4096
+ENV npm_config_build_from_source=true
 
-# Install production deps with safe flags
 RUN npm config set unsafe-perm true \
- && npm install --production --no-audit --no-fund --legacy-peer-deps
+  && npm install --production --no-audit --no-fund --legacy-peer-deps --verbose \
+  || (echo "=== NPM INSTALL FAILED - SHOWING LOGS ===" && cat /root/.npm/_logs/* || true) && exit 1
 
-# Copy source code
 COPY . .
-
-EXPOSE 8080
-CMD ["node", "server.js"]
