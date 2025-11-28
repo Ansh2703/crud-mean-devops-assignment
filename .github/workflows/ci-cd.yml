@@ -3,6 +3,11 @@ name: CI/CD - Build, Push, Deploy
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
 
 jobs:
   build-and-push:
@@ -27,6 +32,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./backend
+          file: ./backend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/crud-backend:latest
 
@@ -34,6 +40,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
+          file: ./frontend/Dockerfile
           push: true
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/crud-frontend:latest
 
@@ -44,14 +51,15 @@ jobs:
       - name: Install SSH client
         run: sudo apt-get update && sudo apt-get install -y openssh-client
 
-      - name: SSH Deploy to VM
+      - name: SSH Deploy to VM (run deploy.sh)
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.VM_HOST }}
           username: ${{ secrets.VM_USER }}
           key: ${{ secrets.VM_SSH_KEY }}
           script: |
+            set -e
             cd /home/${{ secrets.VM_USER }}/crud-mean-devops-assignment || exit 0
             git pull origin main || true
-            docker compose -f docker-compose.prod.yml pull || true
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            # run the deploy script (deploy.sh uses sudo docker compose internally)
+            sudo ./deploy.sh
