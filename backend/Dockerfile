@@ -8,9 +8,9 @@ RUN apk add --no-cache python3 make g++ build-base bash \
 COPY package*.json ./
 
 ENV npm_config_build_from_source=true
+ENV NPM_CONFIG_UNSAFE_PERM=true
 
-RUN npm config set unsafe-perm true \
-  && npm install --production --no-audit --no-fund --legacy-peer-deps --verbose \
+RUN npm install --production --no-audit --no-fund --legacy-peer-deps --verbose \
   || (echo "=== NPM INSTALL FAILED - SHOWING LOGS ===" && cat /root/.npm/_logs/* || true) && exit 1
 
 COPY . .
